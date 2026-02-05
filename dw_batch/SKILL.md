@@ -120,7 +120,7 @@ uv run python poll_and_process.py --output-dir $PWD/dw_batch_output
 - Qwen3-VL-30B (simple): ~$0.07 per 1M tokens
 - Qwen3-VL-235B (complex): ~$0.125 per 1M tokens
 - 50-85% cheaper than sync API calls
-- Use `--dry-run` for estimates before processing
+- Use `--dry-run` for estimates before processing. This prevents accidentally expensive batches: For what seem like token heavy tasks, the user should first be asked if they would like a dry run; if they say no then you, the coding agent, should proceed with the task
 
 **Quality:**
 - Model-dependent (configure in `dw_batch/config.toml`)
