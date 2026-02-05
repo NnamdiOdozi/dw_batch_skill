@@ -286,7 +286,7 @@ See [GUIDE.md - Troubleshooting](GUIDE.md#error-handling-troubleshooting) for co
 ## Related Resources
 
 - **[GUIDE.md](GUIDE.md)** - Complete reference guide (configuration, optimization, troubleshooting)
-- **[examples/](examples/)** - Use case examples with prompts and workflows
+- **[examples/](examples.md)** - Use case examples with prompts and workflows
 - [Doubleword AI Portal](https://doubleword.ai) - API access and billing
 - [Doubleword Batch API Docs](https://docs.doubleword.ai/batches/getting-started-with-batched-api) - Official API documentation
 
@@ -295,7 +295,7 @@ See [GUIDE.md - Troubleshooting](GUIDE.md#error-handling-troubleshooting) for co
 ## Skill Metadata
 
 - **Skill Name:** `dw_batch`
-- **Invocation:** `/dw_batch`, "batch this", "analyze files"
+- **Invocation:** `/dw_batch`, "batch this", "analyze files", "batch process", "not urgent"
 - **Category:** Document Processing, Data Analysis, Batch Operations
 - **Dependencies:** Python 3.12+, Doubleword API access, uv package manager
 - **Output:** Markdown files in `dw_batch_output/`
