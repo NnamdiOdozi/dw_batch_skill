@@ -1,0 +1,8 @@
+Summarize this document in approximately {WORD_COUNT} words, focusing on:
+
+1. **Main Topic/Purpose**: What is this document about?
+2. **Key Findings**: What are the most important insights, conclusions, or recommendations?
+3. **Methodology/Approach**: How was the information gathered or analysis conducted (if applicable)?
+4. **Implications**: What are the practical applications or next steps?
+
+Structure your summary with clear headings and bullet points for readability.

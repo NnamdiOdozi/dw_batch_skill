@@ -1,0 +1,51 @@
+# Doubleword Batch Processing Configuration
+# Non-secret settings for batch processing workflow
+# Secrets (API tokens) go in .env file (gitignored)
+
+[api]
+# Doubleword API base URL
+base_url = "https://api.doubleword.ai/v1"
+
+# API endpoint for chat completions (relative to base URL)
+chat_completions_endpoint = "/v1/chat/completions"
+
+[models]
+# Default model for batch processing (chat completions, images)
+# Options: Qwen/Qwen3-VL-235B-A22B-Instruct-FP8 (complex, slower)
+#          Qwen/Qwen3-VL-30B-A3B-Instruct-FP8 (simple, faster)
+default_model = "Qwen/Qwen3-VL-30B-A3B-Instruct-FP8"
+
+# Model for embeddings batch processing
+embedding_model = "BAAI/bge-en-icl"
+
+[batch]
+# Polling interval in seconds (how often to check batch status)
+polling_interval = 30
+
+# Batch completion window or SLA (how long the API has to complete the job)
+# Options: "1h" or "24h"
+completion_window = "1h"
+
+[output]
+# Summary word count (target length for generated summaries)
+summary_word_count = 500
+
+# Maximum tokens for model response (includes reasoning + summary)
+# Adjust based on your summary_word_count: roughly word_count * 1.5 + buffer for reasoning
+max_tokens = 750
+
+# NOTE: Output directories are passed by the agent via command-line args
+# Agent must specify --output-dir (typically project_root/dw_batch_output)
+# Logs will default to {output_dir}/logs unless --logs-dir is specified
+
+[safety]
+# Cost threshold for pausing before batch creation
+# Script will pause for confirmation if EITHER threshold is exceeded
+# These help prevent accidentally expensive batch jobs
+
+# Maximum input tokens before pausing (prompt + document content)
+# Rule of thumb: 1 token ≈ 0.75 words, or ~4 characters
+max_input_tokens = 250000
+
+# Maximum output tokens before pausing (files × max_tokens)
+max_output_tokens = 100000
