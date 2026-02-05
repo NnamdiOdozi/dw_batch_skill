@@ -182,7 +182,7 @@ uv run python create_batch.py --skip-existing --output-dir $PWD/dw_batch_output
 
 **For detailed guides, see:**
 - [GUIDE.md](GUIDE.md) - Complete reference, troubleshooting, optimization
-- [examples/](examples/) - Use case-specific examples with prompts
+- [examples.md] - Use case-specific examples with prompts
 
 ---
 
@@ -190,22 +190,22 @@ uv run python create_batch.py --skip-existing --output-dir $PWD/dw_batch_output
 
 Ready-to-use examples for common use cases:
 
-### [Receipt/Invoice JSON Extraction](examples/receipt_json/)
+### [Receipt/Invoice JSON Extraction](examples.md:receipt_json/)
 Extract structured data (vendor, date, amount, items) from scanned receipts and invoices into JSON format. Perfect for accounting automation.
 
 **Use case:** "Parse these 50 receipts into structured data"
 
-### [Multimodal Document Analysis](examples/multimodal/)
+### [Multimodal Document Analysis](examples.md:multimodal/)
 Process documents with mixed content (text + images) in a single request for cross-referencing and synthesis.
 
 **Use case:** "Create a report using these 3 documents and 2 charts"
 
-### [Scanned PDF OCR](examples/scanned_pdfs/)
+### [Scanned PDF OCR](examples.mdscanned_pdfs/)
 Extract text from scanned PDFs and images using vision models. Handles handwritten notes and low-quality scans.
-
+:
 **Use case:** "Digitize these scanned contracts"
+:
 
-**See [examples/README.md](examples/README.md) for full list.**
 
 ---
 
@@ -254,7 +254,7 @@ See [GUIDE.md - Supported Formats](GUIDE.md#supported-file-formats) for full com
 2. **Model selection** - Use Qwen3-VL-30B for simple tasks (8x cheaper than 235B)
 3. **MAX_TOKENS** - Size to expected output (~1.3 tokens per word)
 
-**Example:** Processing 3 files with wrong model and token settings = **408x more expensive** than optimal.
+**Example:** Processing 3 files with wrong model and token settings = **100x more expensive** than optimal.
 
 See [GUIDE.md - Cost Optimization](GUIDE.md#cost-optimization-checkpoint) for detailed analysis.
 

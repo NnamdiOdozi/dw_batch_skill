@@ -1,9 +1,11 @@
 ````md
-# dw_batch_request (Doubleword Batch Skill)
+# dw_batch_request (Doubleword AI Batch Skill)
 
-Batch-process lots of files (documents, spreadsheets, images, scanned PDFs) through an OpenAI-compatible API, cheaply and asynchronously. You give it a folder of files plus a prompt, it creates a batch, submits it, then polls and saves results back to disk.
+Get your coding agent to batch-process lots of files (documents, spreadsheets, images, scanned PDFs) through the Doubleword API, cheaply and asynchronously with 50-85% savings compared to real-time LLMs. You give your agent what files you want processed plus a prompt, it creates a batch, submits it, then polls and saves results back to disk.
 
 I built this for **Claude Code** and it works very well there when Claude is the model. I also tested it with **GLM-4.7 running on Ollama** as the driving model; it worked, but the overall experience was slower.
+
+All you need to know to get started in in this README and the SKILLS.md and GUIDE.md is really for agents to read
 
 ---
 
@@ -88,7 +90,7 @@ Check that you are happy with the defaults in the config.toml file eg LLM model,
 
 ## Operation of Skill ie batching of jobs
 
-You just need to say "dw_batch" this task and the agent will load the skill and then take care of the rest. Sometimes the agent will detect a suitable set of tasks for batching and prompt you about it
+You just need to say "dw_batch" this task,together with a prompt that includes how long in words or tokens the output should be etc and the agent will load the skill and then take care of the rest, set config etc. Sometimes the agent will detect a suitable set of tasks for batching and prompt you about it.
 
 Results will be written under:
 
@@ -109,6 +111,20 @@ That is it. The request format remains the same.
 
 ---
 
+## Safety
+
+There are quite a few built-in safety featues eg:
+
+* Cost guardrails: the skill enforces input and output token thresholds (default examples are 250K input tokens or 100K output tokens) and will stop and warn before an expensive batch runs.
+
+ * Dry-run mode: lets the agent estimate scope and cost before submitting anything to the provider. 
+
+ * Safe failure mode: if one file fails extraction (unsupported, too short, corrupted), the batch creation logs it and continues with the remaining files rather than silently failing everything
+
+ * Resumable polling: stopping polling (Ctrl+C) does not cancel the remote batch; you can restart polling later to fetch results, which avoids “panic re-submit” double-spend. 
+
+
+
 ## Tips to avoid expensive mistakes
 
 * Start with a small batch (2–3 files) before running 200.
@@ -121,7 +137,7 @@ That is it. The request format remains the same.
 
 * `SKILL.md` for how the agent should invoke this skill.
 * `GUIDE.md` for deeper usage patterns and troubleshooting.
-* `examples/` for ready-to-run prompts (receipts, multimodal, OCR).
+* `examples.md` for ready-to-run prompts (receipts, multimodal, OCR).
 
 ---
 
