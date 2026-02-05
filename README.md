@@ -1,4 +1,4 @@
-````md
+
 # dw_batch (Doubleword AI Batch Skill)
 
 Get your coding agent to batch-process lots of files (documents, spreadsheets, images, scanned PDFs) through the Doubleword API, cheaply and asynchronously with 50-85% savings compared to real-time LLMs. You give your agent what files you want processed plus a prompt, it creates a batch, submits it, then polls and saves results back to disk.
