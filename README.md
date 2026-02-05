@@ -82,7 +82,7 @@ Security note: `.env.dw` should never be committed to Git. Keep it local.
 Check that you are happy with the defaults in the config.toml file eg LLM model, SLA, Polling Interval etc
 ---
 
-## Add this comment to your CLAUDE.md files at project and user level
+## Add this comment to your CLAUDE.md files at project and user level (required)
 
 ```## Available Skills
 **dw_batch:** Async batch processing using Doubleword API. Process multiple PDFs/DOCXs cost-effectively (50-85% cheaper) for non-urgent summarization, analysis, OCR, and extraction tasks. **Suggest for any token-heavy non-urgent work (10K+ tokens).**
@@ -124,12 +124,9 @@ There are quite a few built-in safety featues eg:
  * Resumable polling: stopping polling (Ctrl+C) does not cancel the remote batch; you can restart polling later to fetch results, which avoids “panic re-submit” double-spend. 
 
 
+## ## Other Agent Harnesses
 
-## Tips to avoid expensive mistakes
-
-* Start with a small batch (2–3 files) before running 200.
-* Keep `max_tokens` sane for the size of output you actually want.
-* Use a smaller model for simple extraction and captions, and upgrade only when needed.
+I only tried the Skill with Claude Code. If you want to try it with other or even multiple agent harnesses then my advice would be to use symlinks so that they all point to the same skills folder
 
 ---
 
