@@ -258,9 +258,10 @@ for idx, pdf_path in enumerate(pdf_files, 1):
             end_page = min(start_page + CHUNK_SIZE, total_pages)
             chunk_images = images[start_page:end_page]
 
-            # Convert each page to base64
+            # Convert each page to base64, wrapped in document tags
             content_parts = [
-                {"type": "text", "text": prompt_template}
+                {"type": "text", "text": prompt_template},
+                {"type": "text", "text": "<document>"}
             ]
 
             for page_idx, img in enumerate(chunk_images, start=start_page + 1):
@@ -274,6 +275,9 @@ for idx, pdf_path in enumerate(pdf_files, 1):
                         "url": f"data:{mime_type};base64,{b64_data}"
                     }
                 })
+
+            # Close document tag
+            content_parts.append({"type": "text", "text": "</document>"})
 
             # Create custom_id
             safe_filename = pdf_path.stem.replace('%', '_').replace(' ', '_').replace('&', 'and')[:40]

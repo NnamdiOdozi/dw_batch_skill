@@ -481,7 +481,10 @@ for idx, file_path in enumerate(all_files, 1):
             "messages": [
                 {
                     "role": "user",
-                    "content": f"{prompt_template}\n\nDocument text:\n{text}"
+                    "content": [
+                        {"type": "text", "text": prompt_template},
+                        {"type": "text", "text": f"<document>\n{text}\n</document>"}
+                    ]
                 }
             ],
             "max_tokens": max_tokens

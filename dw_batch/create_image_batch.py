@@ -142,6 +142,7 @@ for idx, image_path in enumerate(image_files, 1):
         safe_filename = image_path.stem.replace('%', '_').replace(' ', '_').replace('&', 'and')[:55]
 
         # Create batch request with vision model
+        # Use document tags to separate prompt from image content
         request = {
             "custom_id": f"image-{safe_filename}",
             "method": "POST",
@@ -157,10 +158,18 @@ for idx, image_path in enumerate(image_files, 1):
                                 "text": prompt_template
                             },
                             {
+                                "type": "text",
+                                "text": "<document>"
+                            },
+                            {
                                 "type": "image_url",
                                 "image_url": {
                                     "url": f"data:{mime_type};base64,{image_data}"
                                 }
+                            },
+                            {
+                                "type": "text",
+                                "text": "</document>"
                             }
                         ]
                     }

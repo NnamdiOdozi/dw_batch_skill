@@ -237,7 +237,7 @@ See [GUIDE.md - Two-Tier System](GUIDE.md#two-tier-processing-system) for decisi
 
 **Agent requirement:** Must pass `--output-dir` explicitly (no defaults)
 
-**Agent requirement:** Always use the existing scripts in the skill folder for batch operations. Never write inline Python to replicate what the scripts already do. Only write custom code for Tier 2 cases where the scripts genuinely don't cover the use case.
+**Agent requirement:** The `dw_batch` folder is the **canonical version** — always use its scripts for batch operations. Never write inline Python to replicate what the scripts already do. For Tier 2 edge cases, write **one-off inline scripts** but do not persist them to the dw_batch folder unless the user explicitly requests it.
 
 **Agent requirement:** When polling multiple batches, poll in submission order (first submitted = first polled). Use `--batch-id <id>` to specify which batch. Without it, `poll_and_process.py` defaults to the most recent batch_id file.
 
@@ -261,6 +261,12 @@ See [GUIDE.md - Supported Formats](GUIDE.md#supported-file-formats) for full com
 **Example:** Processing 3 files with wrong model and token settings = **100x more expensive** than optimal.
 
 See [GUIDE.md - Cost Optimization](GUIDE.md#cost-optimization-checkpoint) for detailed analysis.
+
+---
+
+## Security Note
+
+**Prompt injection:** Documents can contain text designed to hijack LLM output. Many LLMs are susceptible. Review outputs when processing untrusted documents. See [GUIDE.md - Prompt Injection Warning](GUIDE.md#prompt-injection-warning) for details.
 
 ---
 

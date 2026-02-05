@@ -128,6 +128,15 @@ Use `{WORD_COUNT}` as an optional placeholder substituted from config.toml.
 
 **Other providers:** The scripts use OpenAI SDK, so any OpenAI-compatible API works. Change `base_url` and model in `config.toml`, update token in `.env.dw`.
 
+### Prompt Injection Warning
+
+**Documents can contain prompt injection attacks.** Malicious or compromised documents may include text like "IGNORE ALL PREVIOUS INSTRUCTIONS..." designed to hijack the LLM's output. Many LLMs are susceptible to these attacks — structural defences (system messages, `<document>` tags, guardrail text) do not reliably prevent injection.
+
+**Recommendations:**
+1. **Review outputs** when processing documents from untrusted sources
+2. **Don't use batch results directly** in automated pipelines without human review for sensitive use cases
+3. The scripts use `<document>` tags to separate prompt from content — this provides structural clarity but is not a security boundary
+
 ---
 
 ## SLA / Completion Window
@@ -265,7 +274,9 @@ Failed files are logged to `{output-dir}/logs/batch_errors_TIMESTAMP.log` with f
 
 ### Always Use Existing Scripts
 
-**CRITICAL RULE:** Always use the scripts in the skill folder (`create_batch.py`, `create_image_batch.py`, `create_scanned_pdf_batch.py`, `create_embeddings_batch.py`, `submit_batch.py`, `poll_and_process.py`, `process_results.py`) for batch operations. **Never write inline Python** to replicate what these scripts already do. Custom code is only justified for Tier 2 cases where the existing scripts genuinely don't support the use case (e.g., different prompts per file).
+**CRITICAL RULE:** The `dw_batch` folder is the **canonical version** — always use its scripts (`create_batch.py`, `create_image_batch.py`, `create_scanned_pdf_batch.py`, `create_embeddings_batch.py`, `submit_batch.py`, `poll_and_process.py`, `process_results.py`) for batch operations. **Never write inline Python** to replicate what these scripts already do.
+
+For Tier 2 edge cases where the existing scripts genuinely don't cover the use case (e.g., different prompts per file, conditional logic), write **one-off inline scripts** — do not persist them to the dw_batch folder unless the user explicitly requests it. This keeps the canonical folder clean and easy to understand.
 
 ### Multiple Batches
 
