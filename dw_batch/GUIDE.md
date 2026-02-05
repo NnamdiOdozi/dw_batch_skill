@@ -759,7 +759,7 @@ Based on real-world usage (Feb 2026):
 
 ### Cost Threshold Protection
 
-**Automatic safety checks** prevent accidentally expensive batches:
+**Automatic safety checks** prevent accidentally expensive batches: For what seem like token heavy tasks, the user should first be asked if they would like a dry run; if they say no then you should proceed with the task
 
 ```bash
 # Run dry-run to check costs
