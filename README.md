@@ -80,7 +80,7 @@ Security note: `.env.dw` should never be committed to Git. Keep it local.
 
 ## Configure your config.toml (required)
 Check that you are happy with the defaults in the config.toml file eg LLM model, SLA, Polling Interval etc
----
+
 
 ## Add this comment to your CLAUDE.md files at project and user level (required)
 
@@ -124,7 +124,7 @@ There are quite a few built-in safety featues eg:
  * Resumable polling: stopping polling (Ctrl+C) does not cancel the remote batch; you can restart polling later to fetch results, which avoids “panic re-submit” double-spend. 
 
 
-## ## Other Agent Harnesses
+## Other Agent Harnesses
 
 I only tried the Skill with Claude Code. If you want to try it with other or even multiple agent harnesses then my advice would be to use symlinks so that they all point to the same skills folder
 
