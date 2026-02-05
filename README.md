@@ -5,7 +5,7 @@ Get your coding agent to batch-process lots of files (documents, spreadsheets, i
 
 I built this for **Claude Code** and it works very well there when Claude is the model. I also tested it with **GLM-4.7 running on Ollama** as the driving model; it worked, but the overall experience was slower.
 
-All you need to know to get started in in this README and the SKILLS.md and GUIDE.md is really for agents to read
+All you need to know to get started is in this README and the SKILLS.md and GUIDE.md is really for agents to read
 
 ---
 
