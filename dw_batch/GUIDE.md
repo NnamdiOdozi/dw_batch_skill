@@ -1,6 +1,6 @@
 # Doubleword Batch Processing - Complete Guide
 
-Detailed reference for the dw_batch_request skill. For quick start, see [SKILL.md](SKILL.md).
+Detailed reference for the dw_batch skill. For quick start, see [SKILL.md](SKILL.md).
 
 ---
 
@@ -877,7 +877,7 @@ Error: --output-dir is required
 ```
 User: "I need to analyze these 50 customer feedback documents"
 Claude: "This is perfect for batch processing! I can use the
-         dw_batch_request skill to process these async at 50-85% cost savings.
+         dw_batch skill to process these async at 50-85% cost savings.
          Results in 1-2 minutes. Want me to set that up?"
 
 User: "Caption these 200 product images for our website"

@@ -1,5 +1,5 @@
 ---
-name: dw_batch_request
+name: dw_batch
 description: Async batch processing using Doubleword API. Process multiple documents cost-effectively (50-85% cheaper) for analysis, summarization, translation, OCR, and structured data extraction.
 ---
 
@@ -145,7 +145,7 @@ Suggest this skill when the user's request involves:
 8. **Structured data extraction** - "Parse receipts, invoices, and other docs to structured format"
 
 ### User Invocation
-- `/dw_batch_request` - Direct skill invocation
+- `/dw_batch` - Direct skill invocation
 - "batch this" - Natural language trigger
 - "analyze these files" - Implicit batch request
 
@@ -284,8 +284,8 @@ See [GUIDE.md - Troubleshooting](GUIDE.md#error-handling-troubleshooting) for co
 
 ## Skill Metadata
 
-- **Skill Name:** `dw_batch_request`
-- **Invocation:** `/dw_batch_request`, "batch this", "analyze files"
+- **Skill Name:** `dw_batch`
+- **Invocation:** `/dw_batch`, "batch this", "analyze files"
 - **Category:** Document Processing, Data Analysis, Batch Operations
 - **Dependencies:** Python 3.12+, Doubleword API access, uv package manager
 - **Output:** Markdown files in `dw_batch_output/`
