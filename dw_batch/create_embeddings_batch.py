@@ -9,7 +9,7 @@ USE THIS WHEN:
   ✓ No conditional logic needed
 
 CONFIGURATION:
-- Set DOUBLEWORD_EMBEDDING_MODEL in .env.dw
+- Edit config.toml for embedding model and other settings
 - Use --extensions to filter file types
 - Use --chunk-size to split long documents (default: no chunking)
 
@@ -28,6 +28,8 @@ from pathlib import Path
 import glob
 from dotenv import load_dotenv
 from datetime import datetime
+import tomllib
+import sys
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(
@@ -74,14 +76,52 @@ parser.add_argument(
     metavar='TOKENS',
     help='Split documents into chunks of this many tokens (default: no chunking)'
 )
+parser.add_argument(
+    '--output-dir',
+    metavar='DIR',
+    required=True,
+    help='Output directory for results (REQUIRED - agent must pass absolute path to project root)'
+)
+parser.add_argument(
+    '--logs-dir',
+    metavar='DIR',
+    help='Directory for logs and batch files (default: {output-dir}/logs)'
+)
 
 args = parser.parse_args()
 
-# Load environment variables
-load_dotenv()
+# Load configuration from config.toml and .env.dw
+def load_config():
+    """Load config from dw_batch/config.toml and merge with .env.dw secrets."""
+    config_path = Path(__file__).parent / 'config.toml'
+    if not config_path.exists():
+        print(f"Error: Configuration file not found: {config_path}")
+        print("Please ensure config.toml exists")
+        sys.exit(1)
 
-# Get embedding model from environment (default to a common model)
-embedding_model = os.getenv('DOUBLEWORD_EMBEDDING_MODEL', 'BAAI/bge-en-icl')
+    with open(config_path, 'rb') as f:
+        config = tomllib.load(f)
+
+    env_path = Path(__file__).parent / '.env.dw'
+    load_dotenv(dotenv_path=env_path)
+
+    auth_token = os.getenv('DOUBLEWORD_AUTH_TOKEN')
+    if not auth_token:
+        print("="*60)
+        print("ERROR: DOUBLEWORD_AUTH_TOKEN not found")
+        print("="*60)
+        print("Please ensure you have:")
+        print("1. Created .env.dw file from .env.dw.sample")
+        print("2. Added your DOUBLEWORD_AUTH_TOKEN to .env.dw")
+        print("="*60)
+        sys.exit(1)
+
+    return config, auth_token
+
+config, auth_token = load_config()
+
+# Get embedding model from config
+embedding_model = config['models']['embedding_model']
 
 # Print configuration
 print("="*60)
@@ -394,7 +434,7 @@ for idx, file_path in enumerate(all_files, 1):
 # SAVE BATCH REQUEST FILE TO LOGS FOLDER
 # ============================================================================
 
-logs_dir = Path('../../dw_batch_output/logs')
+logs_dir = Path(args.logs_dir) if args.logs_dir else Path(args.output_dir) / 'logs'
 logs_dir.mkdir(parents=True, exist_ok=True)
 
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

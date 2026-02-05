@@ -60,6 +60,11 @@ parser.add_argument(
     metavar='DIR',
     help='Logs directory (default: {output-dir}/logs)'
 )
+parser.add_argument(
+    '--batch-id',
+    metavar='ID',
+    help='Specific batch ID to process (default: most recent batch_id file in logs/)'
+)
 
 args = parser.parse_args()
 
@@ -76,19 +81,23 @@ client = OpenAI(
 output_dir = Path(args.output_dir)
 logs_dir = Path(args.logs_dir) if args.logs_dir else (output_dir / 'logs')
 
-# Find most recent batch_id file in logs/
-if not logs_dir.exists():
-    print(f"Error: {logs_dir} directory not found.")
-    exit(1)
+# Determine batch ID
+if args.batch_id:
+    batch_id = args.batch_id
+else:
+    # Find most recent batch_id file in logs/
+    if not logs_dir.exists():
+        print(f"Error: {logs_dir} directory not found.")
+        exit(1)
 
-batch_id_files = list(logs_dir.glob('batch_id_*.txt'))
-if not batch_id_files:
-    print("Error: No batch_id_*.txt files found in logs/.")
-    exit(1)
+    batch_id_files = list(logs_dir.glob('batch_id_*.txt'))
+    if not batch_id_files:
+        print("Error: No batch_id_*.txt files found in logs/.")
+        exit(1)
 
-latest_batch_id_file = max(batch_id_files, key=lambda p: p.stat().st_mtime)
-with open(latest_batch_id_file, 'r') as f:
-    batch_id = f.read().strip()
+    latest_batch_id_file = max(batch_id_files, key=lambda p: p.stat().st_mtime)
+    with open(latest_batch_id_file, 'r') as f:
+        batch_id = f.read().strip()
 
 print(f"Retrieving batch results: {batch_id}\n")
 
@@ -117,7 +126,7 @@ try:
     prompt_path = Path(__file__).parent / 'prompt.txt'
     with open(prompt_path, 'r') as f:
         prompt_content = f.read().lower()
-        json_keywords = ['json', 'extract', 'structured', 'parse', '{', 'return as', 'output format']
+        json_keywords = ['json', 'structured', 'parse', 'return as', 'output format']
         prompt_expects_json = any(keyword in prompt_content for keyword in json_keywords)
         if prompt_expects_json:
             print("JSON output detected in prompt - will validate JSON structure\n")

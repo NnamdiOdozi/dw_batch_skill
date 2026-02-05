@@ -59,6 +59,11 @@ parser.add_argument(
     metavar='DIR',
     help='Logs directory (default: {output-dir}/logs)'
 )
+parser.add_argument(
+    '--batch-id',
+    metavar='ID',
+    help='Specific batch ID to poll (default: most recent batch_id file in logs/)'
+)
 
 args = parser.parse_args()
 
@@ -76,28 +81,33 @@ client = OpenAI(
 output_dir = Path(args.output_dir)
 logs_dir = Path(args.logs_dir) if args.logs_dir else (output_dir / 'logs')
 
-if not logs_dir.exists():
-    print(f"Error: {logs_dir} directory not found.")
-    print("Run submit_batch.py first to create a batch job.")
-    exit(1)
+# Determine batch ID
+if args.batch_id:
+    batch_id = args.batch_id
+else:
+    if not logs_dir.exists():
+        print(f"Error: {logs_dir} directory not found.")
+        print("Run submit_batch.py first to create a batch job.")
+        exit(1)
 
-batch_id_files = list(logs_dir.glob('batch_id_*.txt'))
-if not batch_id_files:
-    print("Error: No batch_id_*.txt files found in ../../dw_batch_output/logs/.")
-    print("Run submit_batch.py first to create a batch job.")
-    exit(1)
+    batch_id_files = list(logs_dir.glob('batch_id_*.txt'))
+    if not batch_id_files:
+        print("Error: No batch_id_*.txt files found in logs/.")
+        print("Run submit_batch.py first to create a batch job.")
+        exit(1)
 
-# Get most recent batch ID file
-latest_batch_id_file = max(batch_id_files, key=lambda p: p.stat().st_mtime)
-with open(latest_batch_id_file, 'r') as f:
-    batch_id = f.read().strip()
+    # Get most recent batch ID file
+    latest_batch_id_file = max(batch_id_files, key=lambda p: p.stat().st_mtime)
+    with open(latest_batch_id_file, 'r') as f:
+        batch_id = f.read().strip()
 
 print("="*60)
 print("BATCH MONITORING")
 print("="*60)
 print(f"Output directory: {output_dir.resolve()}")
 print(f"Logs directory: {logs_dir.resolve()}")
-print(f"Batch ID file: {latest_batch_id_file}")
+if not args.batch_id:
+    print(f"Batch ID file: {latest_batch_id_file}")
 print(f"Batch ID: {batch_id}")
 print(f"Polling interval: {polling_interval}s")
 print("="*60)
@@ -117,8 +127,8 @@ try:
             print("\n✓ Batch completed successfully!")
             print("Downloading and processing results...\n")
 
-            # Run process_results.py with the same output/logs directories
-            cmd = [sys.executable, 'process_results.py', '--output-dir', str(output_dir)]
+            # Run process_results.py with the same output/logs directories and batch ID
+            cmd = [sys.executable, 'process_results.py', '--output-dir', str(output_dir), '--batch-id', batch_id]
             if args.logs_dir:
                 cmd.extend(['--logs-dir', str(logs_dir)])
             result = subprocess.run(cmd)

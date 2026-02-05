@@ -49,3 +49,7 @@ max_input_tokens = 250000
 
 # Maximum output tokens before pausing (files × max_tokens)
 max_output_tokens = 100000
+
+# Only suggest dry-run when estimated input tokens exceed this threshold
+# Below this, the agent should proceed without offering a dry-run
+dry_run_threshold = 25000

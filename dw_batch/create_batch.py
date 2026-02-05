@@ -13,8 +13,7 @@ For advanced scenarios, generate custom code. See SKILL.md.
 
 CONFIGURATION:
 - Edit prompt.txt for your task instructions
-- Set DOUBLEWORD_MODEL in .env.dw (default: Qwen3-VL-235B)
-- Adjust MAX_TOKENS based on expected output length
+- Edit config.toml for model, max_tokens, and other settings
 - Use --extensions to filter file types
 
 SUPPORTED FORMATS: PDF, DOCX, PPTX, ODP, TXT, MD, TSV, CSV, XLS, XLSX
@@ -500,19 +499,23 @@ if args.dry_run:
     estimated_output_tokens = len(requests) * max_tokens
 
     # Cost estimation based on Doubleword pricing (Feb 2026)
-    # From screenshot: Qwen3-VL-235B: $0.125/1M input (1h), Qwen3-VL-30B: $0.07/1M input (1h)
+    # Rates: per 1M tokens, separate input/output pricing
     if '235B' in model:
-        cost_per_1m = 0.125  # 1h pricing
+        input_cost_per_1m = 0.15   # 1h SLA
+        output_cost_per_1m = 0.55  # 1h SLA
         model_display = "Qwen3-VL-235B (complex)"
     elif '30B' in model:
-        cost_per_1m = 0.07  # 1h pricing
+        input_cost_per_1m = 0.07   # 1h SLA
+        output_cost_per_1m = 0.30  # 1h SLA
         model_display = "Qwen3-VL-30B (simple)"
     else:
-        cost_per_1m = 0.10  # fallback estimate
+        input_cost_per_1m = 0.10   # fallback estimate
+        output_cost_per_1m = 0.40  # fallback estimate
         model_display = model
 
-    # Simple estimate: same rate for input/output (conservative)
-    estimated_cost = ((estimated_input_tokens + estimated_output_tokens) / 1_000_000) * cost_per_1m
+    estimated_input_cost = (estimated_input_tokens / 1_000_000) * input_cost_per_1m
+    estimated_output_cost = (estimated_output_tokens / 1_000_000) * output_cost_per_1m
+    estimated_cost = estimated_input_cost + estimated_output_cost
 
     completion_window = config['batch']['completion_window']
 
@@ -537,12 +540,15 @@ if args.dry_run:
     print(f"Max output tokens: {estimated_output_tokens:,} ({len(requests)} × {max_tokens})")
     print(f"Total tokens: ~{estimated_input_tokens + estimated_output_tokens:,}")
     print()
-    print(f"Estimated cost: ${estimated_cost:.4f}")
+    print(f"Estimated input cost:  ${estimated_input_cost:.4f} ({estimated_input_tokens:,} tokens × ${input_cost_per_1m}/1M)")
+    print(f"Estimated output cost: ${estimated_output_cost:.4f} ({estimated_output_tokens:,} tokens × ${output_cost_per_1m}/1M)")
+    print(f"Estimated total cost:  ${estimated_cost:.4f}")
     print()
     print("⚠️  This is a ROUGH ESTIMATE:")
     print("  - Token count is approximate (4 chars ≈ 1 token)")
     print("  - Output cost assumes MAX_TOKENS per file (worst case)")
     print("  - Actual costs may be lower if responses are shorter")
+    print("  - Prices shown are for 1h SLA; 24h SLA is cheaper")
     print("="*60)
 
     # Check thresholds and warn if exceeded

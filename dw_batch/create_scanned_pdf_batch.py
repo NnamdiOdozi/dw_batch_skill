@@ -6,6 +6,10 @@ For PDFs that are scanned (no extractable text), this script:
 2. Converts each page to an image
 3. Sends images to vision model with base64 encoding
 
+CONFIGURATION:
+- Edit prompt.txt for your task instructions
+- Edit config.toml for model, max_tokens, and other settings
+
 CONTEXT LIMITS:
 - Model context: 128K tokens
 - Each image page: ~3-4K tokens
@@ -14,13 +18,13 @@ CONTEXT LIMITS:
 
 USAGE:
   # Process scanned PDFs in directory
-  python create_scanned_pdf_batch.py --input-dir /path/to/scans/
+  python create_scanned_pdf_batch.py --output-dir /path/to/output/ --input-dir /path/to/scans/
 
   # Process specific file
-  python create_scanned_pdf_batch.py --files document.pdf
+  python create_scanned_pdf_batch.py --output-dir /path/to/output/ --files document.pdf
 
   # Custom chunk size (pages per request)
-  python create_scanned_pdf_batch.py --chunk-size 20
+  python create_scanned_pdf_batch.py --output-dir /path/to/output/ --chunk-size 20
 """
 
 import json
@@ -31,6 +35,38 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 import glob
+import tomllib
+import sys
+
+# Load configuration from config.toml and .env.dw
+def load_config():
+    """Load config from dw_batch/config.toml and merge with .env.dw secrets."""
+    config_path = Path(__file__).parent / 'config.toml'
+    if not config_path.exists():
+        print(f"Error: Configuration file not found: {config_path}")
+        print("Please ensure config.toml exists")
+        sys.exit(1)
+
+    with open(config_path, 'rb') as f:
+        config = tomllib.load(f)
+
+    env_path = Path(__file__).parent / '.env.dw'
+    load_dotenv(dotenv_path=env_path)
+
+    auth_token = os.getenv('DOUBLEWORD_AUTH_TOKEN')
+    if not auth_token:
+        print("="*60)
+        print("ERROR: DOUBLEWORD_AUTH_TOKEN not found")
+        print("="*60)
+        print("Please ensure you have:")
+        print("1. Created .env.dw file from .env.dw.sample")
+        print("2. Added your DOUBLEWORD_AUTH_TOKEN to .env.dw")
+        print("="*60)
+        sys.exit(1)
+
+    return config, auth_token
+
+config, auth_token = load_config()
 
 # Parse arguments
 parser = argparse.ArgumentParser(
@@ -43,10 +79,18 @@ parser.add_argument('--chunk-size', type=int, default=30, metavar='PAGES',
                     help='Max pages per request (default: 30, considers context limit)')
 parser.add_argument('--force-scan', action='store_true',
                     help='Treat all PDFs as scanned (skip text extraction check)')
+parser.add_argument(
+    '--output-dir',
+    metavar='DIR',
+    required=True,
+    help='Output directory for results (REQUIRED - agent must pass absolute path to project root)'
+)
+parser.add_argument(
+    '--logs-dir',
+    metavar='DIR',
+    help='Directory for logs and batch files (default: {output-dir}/logs)'
+)
 args = parser.parse_args()
-
-# Load environment variables
-load_dotenv()
 
 # Import PDF processing libraries
 try:
@@ -77,11 +121,17 @@ if CHUNK_SIZE > max_safe_pages:
     print(f"  Recommended max: {max_safe_pages} pages ({MAX_CONTEXT} tokens / {TOKENS_PER_PAGE} tokens/page)")
     print(f"  Continuing with {CHUNK_SIZE} pages per request...\n")
 
+# Get config values
+model = config['models']['default_model']
+max_tokens = config['output']['max_tokens']
+chat_endpoint = config['api']['chat_completions_endpoint']
+
 print("="*70)
 print("SCANNED PDF BATCH REQUEST CONFIGURATION")
 print("="*70)
-print(f"Model: {os.getenv('DOUBLEWORD_MODEL', 'Qwen/Qwen3-VL-235B-A22B-Instruct-FP8')}")
-print(f"Max tokens: {os.getenv('MAX_TOKENS', '5000')}")
+print(f"Model: {model}")
+print(f"Max tokens: {max_tokens}")
+print(f"Auth token: ...{auth_token[-4:]}")
 print(f"Pages per request: {CHUNK_SIZE}")
 print(f"Estimated tokens per page: {TOKENS_PER_PAGE}")
 print(f"Force scan mode: {args.force_scan}")
@@ -236,16 +286,16 @@ for idx, pdf_path in enumerate(pdf_files, 1):
             request = {
                 "custom_id": custom_id,
                 "method": "POST",
-                "url": os.getenv('CHAT_COMPLETIONS_ENDPOINT', '/v1/chat/completions'),
+                "url": chat_endpoint,
                 "body": {
-                    "model": os.getenv('DOUBLEWORD_MODEL', 'Qwen/Qwen3-VL-235B-A22B-Instruct-FP8'),
+                    "model": model,
                     "messages": [
                         {
                             "role": "user",
                             "content": content_parts
                         }
                     ],
-                    "max_tokens": int(os.getenv('MAX_TOKENS', '5000'))
+                    "max_tokens": max_tokens
                 }
             }
             requests.append(request)
@@ -264,7 +314,7 @@ for idx, pdf_path in enumerate(pdf_files, 1):
         continue
 
 # Save to logs folder
-logs_dir = Path('../../dw_batch_output/logs')
+logs_dir = Path(args.logs_dir) if args.logs_dir else Path(args.output_dir) / 'logs'
 logs_dir.mkdir(parents=True, exist_ok=True)
 
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

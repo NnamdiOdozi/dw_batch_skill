@@ -117,10 +117,10 @@ uv run python poll_and_process.py --output-dir $PWD/dw_batch_output
 - Large batch (50+ files): 5-15 minutes
 
 **Cost (Feb 2026 Doubleword pricing):**
-- Qwen3-VL-30B (simple): ~$0.07 per 1M tokens
-- Qwen3-VL-235B (complex): ~$0.125 per 1M tokens
+- Qwen3-VL-30B (simple): $0.07 input / $0.30 output per 1M tokens (1h SLA)
+- Qwen3-VL-235B (complex): $0.15 input / $0.55 output per 1M tokens (1h SLA)
 - 50-85% cheaper than sync API calls
-- Use `--dry-run` for estimates before processing. This prevents accidentally expensive batches: For what seem like token heavy tasks, the user should first be asked if they would like a dry run; if they say no then you, the coding agent, should proceed with the task
+- Use `--dry-run` for estimates before processing. Only offer a dry-run when estimated input tokens exceed `dry_run_threshold` (default 25K) in config.toml. If the user declines, proceed with the task. For small jobs below the threshold, skip the dry-run offer entirely.
 
 **Quality:**
 - Model-dependent (configure in `dw_batch/config.toml`)
@@ -236,6 +236,10 @@ See [GUIDE.md - Two-Tier System](GUIDE.md#two-tier-processing-system) for decisi
 **Agent Rule:** When user requests changes to model, tokens, word count, polling → **edit `config.toml`**, NOT `.env.dw`
 
 **Agent requirement:** Must pass `--output-dir` explicitly (no defaults)
+
+**Agent requirement:** Always use the existing scripts in the skill folder for batch operations. Never write inline Python to replicate what the scripts already do. Only write custom code for Tier 2 cases where the scripts genuinely don't cover the use case.
+
+**Agent requirement:** When polling multiple batches, poll in submission order (first submitted = first polled). Use `--batch-id <id>` to specify which batch. Without it, `poll_and_process.py` defaults to the most recent batch_id file.
 
 See [GUIDE.md - Configuration](GUIDE.md#configuration) for detailed setup.
 
