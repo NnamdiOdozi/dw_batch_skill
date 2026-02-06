@@ -20,7 +20,7 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 3. **Script selection:** Use the table below - do NOT mix file types across scripts
 4. **Always specify batch file** explicitly when submitting; poll batches in submission order
 5. **Use `--dry-run`** for large batches
-6. **Pre-flight size check**: Files >360K chars (~100K tokens) need chunking (Tier 2). Script auto-skips with warning.
+6. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **If any files are skipped, read GUIDE.md 'Tier 2 Processing' section and process them with chunking. Do not leave skipped files unprocessed.**
 
 ### Script Selection Table
 
