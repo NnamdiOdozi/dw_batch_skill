@@ -133,7 +133,63 @@ try:
 except FileNotFoundError:
     pass  # prompt.txt not found, skip JSON validation
 
-# Process each result with quality checks
+# Detect response type from first result line
+first_line = next((l for l in file_response.text.split('\n') if l.strip()), None)
+if first_line:
+    first_result = json.loads(first_line)
+    is_embeddings = 'data' in first_result.get('response', {}).get('body', {})
+else:
+    is_embeddings = False
+
+# Handle embeddings separately
+if is_embeddings:
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    embeddings_dir = output_dir / 'embeddings' / f'batch_{timestamp}'
+    embeddings_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Embeddings batch detected - saving to: {embeddings_dir}/\n")
+
+    results_count = 0
+    for line in file_response.text.split('\n'):
+        if not line.strip():
+            continue
+
+        result = json.loads(line)
+        custom_id = result['custom_id']
+        body = result['response']['body']
+
+        # Extract embedding data
+        embedding_data = body['data'][0]
+        model = body.get('model', 'unknown')
+        dimensions = len(embedding_data['embedding'])
+
+        # Save embedding as JSON
+        output_file = embeddings_dir / f'{custom_id}.json'
+        with open(output_file, 'w') as f:
+            json.dump({
+                'custom_id': custom_id,
+                'model': model,
+                'dimensions': dimensions,
+                'embedding': embedding_data['embedding']
+            }, f, indent=2)
+
+        print(f"✓ Saved: {output_file.name} ({dimensions} dimensions)")
+        results_count += 1
+
+    print("\n" + "="*60)
+    print("EMBEDDINGS SUMMARY")
+    print("="*60)
+    print(f"Total embeddings saved: {results_count}")
+    print(f"Output folder: {embeddings_dir}")
+    print("="*60)
+    sys.exit(0)
+
+# Process each result with quality checks (chat completions)
+# Create timestamped summaries folder
+batch_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+summaries_dir = output_dir / 'summaries' / f'batch_{batch_timestamp}'
+summaries_dir.mkdir(parents=True, exist_ok=True)
+print(f"Summaries batch - saving to: {summaries_dir}/\n")
+
 results_count = 0
 quality_issues = []
 empty_outputs = []
@@ -178,11 +234,8 @@ for line in file_response.text.split('\n'):
             invalid_json_outputs.append((filename, str(e)))
             print(f"⚠️  {filename}: Invalid JSON - {e}")
 
-    # Generate timestamp
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-    # Save summary with timestamp as markdown
-    output_path = output_dir / f'{filename}_summary_{timestamp}.md'
+    # Save summary to timestamped batch folder
+    output_path = summaries_dir / f'{filename}_summary.md'
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(summary)
 
@@ -235,4 +288,5 @@ if prompt_expects_json:
 if not empty_outputs and not too_short_outputs and not invalid_json_outputs:
     print("\n✓ All outputs look good!")
 
+print(f"\nOutput folder: {summaries_dir}")
 print("="*60)
