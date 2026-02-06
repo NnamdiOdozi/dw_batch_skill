@@ -16,7 +16,7 @@ chat_completions_endpoint = "/v1/chat/completions"
 default_model = "Qwen/Qwen3-VL-30B-A3B-Instruct-FP8"
 
 # Model for embeddings batch processing
-embedding_model = "BAAI/bge-en-icl"
+embedding_model = "Qwen/Qwen3-Embedding-8B"
 
 [batch]
 # Polling interval in seconds (how often to check batch status)

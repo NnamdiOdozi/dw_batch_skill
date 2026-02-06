@@ -7,7 +7,7 @@ description: Async batch processing using Doubleword API. Process multiple docum
 
 ## Overview
 
-A Claude Code skill for async batch processing using the Doubleword API. Process multiple documents/data files cost-effectively (50-85% cheaper than sync) for non-urgent tasks like analysis, summarization, translation, and evaluation.
+A Claude Code skill for async batch processing using the Doubleword API. Process multiple documents/data files cost-effectively (50-85% cheaper than sync) for non-urgent tasks like embedding generation, analysis, summarization, translation, and evaluation.
 
 **Cost & Speed:** 2 files processed in ~1-2 minutes for ~0.4p (with 1h SLA).
 
@@ -110,11 +110,6 @@ uv run python poll_and_process.py --output-dir $PWD/dw_batch_output
 - Partial results are NOT saved (all-or-nothing per batch)
 
 ### Performance Expectations
-
-**Timing (1h SLA):**
-- Small batch (2-10 files): 1-2 minutes
-- Medium batch (10-50 files): 2-5 minutes
-- Large batch (50+ files): 5-15 minutes
 
 **Cost (Feb 2026 Doubleword pricing):**
 - Qwen3-VL-30B (simple): $0.07 input / $0.30 output per 1M tokens (1h SLA)

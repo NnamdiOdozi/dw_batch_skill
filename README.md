@@ -138,6 +138,11 @@ I only tried the Skill with Claude Code. If you want to try it with other or eve
 
 ---
 
+## Ideas for the future
+
+implement local queue and jobs manifest
+sleeper agent that wakes up every 30mins to work on local queue
+
 ## License and support
 
 This is provided as-is. If you hit issues, open a GitHub issue with:
