@@ -13,6 +13,16 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 
 ---
 
+## Agent Checklist (Read Before Execution)
+
+1. **Read SKILL.md fully** before planning; consult GUIDE.md for Tier 2 cases and large jobs (>20K input or >5K output tokens)
+2. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
+3. **Script selection:** `create_batch.py` (text/data), `create_image_batch.py`, `create_scanned_pdf_batch.py`, `create_embeddings_batch.py`
+4. **Always specify batch file** explicitly when submitting; poll batches in submission order
+5. **Use `--dry-run`** for large batches
+
+---
+
 ## Quick Start (5 Minutes)
 
 ### Prerequisites
@@ -177,7 +187,7 @@ uv run python create_batch.py --skip-existing --output-dir $PWD/dw_batch_output
 
 **For detailed guides, see:**
 - [GUIDE.md](GUIDE.md) - Complete reference, troubleshooting, optimization
-- [examples.md] - Use case-specific examples with prompts
+- [examples.md](examples.md) - Use case-specific examples with prompts
 
 ---
 
@@ -185,17 +195,17 @@ uv run python create_batch.py --skip-existing --output-dir $PWD/dw_batch_output
 
 Ready-to-use examples for common use cases:
 
-### [Receipt/Invoice JSON Extraction](examples.md:receipt_json/)
+### [Receipt/Invoice JSON Extraction](examples.md#receiptinvoice-json-extraction)
 Extract structured data (vendor, date, amount, items) from scanned receipts and invoices into JSON format. Perfect for accounting automation.
 
 **Use case:** "Parse these 50 receipts into structured data"
 
-### [Multimodal Document Analysis](examples.md:multimodal/)
+### [Multimodal Document Analysis](examples.md#multimodal-document-analysis)
 Process documents with mixed content (text + images) in a single request for cross-referencing and synthesis.
 
 **Use case:** "Create a report using these 3 documents and 2 charts"
 
-### [Scanned PDF OCR](examples.mdscanned_pdfs/)
+### [Scanned PDF OCR](examples.md#scanned-pdf-ocr)
 Extract text from scanned PDFs and images using vision models. Handles handwritten notes and low-quality scans.
 :
 **Use case:** "Digitize these scanned contracts"
