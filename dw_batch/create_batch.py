@@ -216,13 +216,30 @@ if args.skip_existing:
     # Determine output directory to check for existing files
     output_dir = Path(args.output_dir)
 
-    # Find existing summary files
+    # Find existing summary files and extract their prompt hashes
     existing_summaries = {}
     if output_dir.exists():
-        for summary_file in output_dir.glob('*_summary_*.md'):
-            # Extract base filename (everything before _summary_)
-            base_name = summary_file.stem.split('_summary_')[0]
-            existing_summaries[base_name] = summary_file
+        # Search in all batch subdirectories
+        for summary_file in output_dir.glob('text_output/batch_*/*_summary.md'):
+            # Read first line to extract hash
+            with open(summary_file, 'r') as f:
+                first_line = f.readline().strip()
+
+            stored_hash = None
+            if first_line.startswith('<!-- batch_metadata:'):
+                try:
+                    metadata_json = first_line.replace('<!-- batch_metadata:', '').replace('-->', '').strip()
+                    metadata = json.loads(metadata_json)
+                    stored_hash = metadata.get('prompt_hash')
+                except:
+                    pass
+
+            # Extract base filename (everything before _summary)
+            base_name = summary_file.stem.replace('_summary', '')
+            existing_summaries[base_name] = {
+                'file': summary_file,
+                'hash': stored_hash
+            }
 
         if existing_summaries:
             print(f"Found {len(existing_summaries)} existing summary file(s) in {output_dir}")
@@ -390,8 +407,15 @@ for idx, file_path in enumerate(all_files, 1):
         safe_filename = file_stem.replace('%', '_').replace(' ', '_').replace('&', 'and')[:55]
 
         if safe_filename in existing_summaries:
-            print(f"  ⏭️  Skipped (existing summary: {existing_summaries[safe_filename].name})")
-            continue
+            existing_info = existing_summaries[safe_filename]
+            stored_hash = existing_info['hash']
+
+            if stored_hash == prompt_hash:
+                print(f"  ⏭️  Skipped (hash match: {prompt_hash})")
+                continue
+            else:
+                print(f"  ♻️  Re-processing (prompt changed: {stored_hash} → {prompt_hash})")
+                # Don't skip - continue to process
 
     text = None
     pages = 0
@@ -675,8 +699,27 @@ with open(output_file, 'w') as f:
     for req in requests:
         f.write(json.dumps(req) + '\n')
 
+# Create manifest file with prompt hash and file mappings
+manifest = {
+    "prompt_hash": prompt_hash,
+    "timestamp": timestamp,
+    "model": model,
+    "files": {}
+}
+for req in requests:
+    custom_id = req["custom_id"]
+    safe_filename = custom_id.replace("summary-", "")
+    manifest["files"][custom_id] = {
+        "safe_filename": safe_filename
+    }
+
+manifest_file = logs_dir / f'batch_manifest_{timestamp}.json'
+with open(manifest_file, 'w') as f:
+    json.dump(manifest, f, indent=2)
+
 print(f"\n{'='*60}")
 print(f"✓ Created {output_file} with {len(requests)} requests")
+print(f"✓ Created {manifest_file} with prompt hash: {prompt_hash}")
 print(f"\nExtraction methods used:")
 for method, count in sorted(extraction_stats.items()):
     print(f"  {method}: {count} files")

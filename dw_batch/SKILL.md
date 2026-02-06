@@ -15,12 +15,13 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 
 ## Agent Checklist (Read Before Execution)
 
-1. **Read SKILL.md fully** before planning; consult GUIDE.md for Tier 2 cases and large jobs (>20K input or >5K output tokens)
+1. **STOP and read SKILL.md fully** before ANY batch operations. **MANDATORY: Read GUIDE.md BEFORE proceeding** when: (a) any file is skipped, (b) estimated tokens >20K input or >5K output, (c) you need per-file prompts or conditional logic.
 2. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
 3. **Script selection:** Use the table below - do NOT mix file types across scripts
 4. **Always specify batch file** explicitly when submitting; poll batches in submission order
 5. **Use `--dry-run`** for large batches
-6. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **If any files are skipped, read GUIDE.md 'Tier 2 Processing' section and process them with chunking. Do not leave skipped files unprocessed.**
+6. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
+7. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
 
 ### Script Selection Table
 

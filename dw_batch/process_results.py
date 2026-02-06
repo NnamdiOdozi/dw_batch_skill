@@ -190,6 +190,15 @@ summaries_dir = output_dir / 'text_output' / f'batch_{batch_timestamp}'
 summaries_dir.mkdir(parents=True, exist_ok=True)
 print(f"Text output batch - saving to: {summaries_dir}/\n")
 
+# Find and read manifest file by looking for batch_manifest_*.json with matching timestamp
+manifest_data = None
+manifest_files = sorted(logs_dir.glob('batch_manifest_*.json'), reverse=True)
+if manifest_files:
+    # Use the most recent manifest file
+    with open(manifest_files[0], 'r') as f:
+        manifest_data = json.load(f)
+    print(f"Loaded manifest: {manifest_files[0].name}\n")
+
 results_count = 0
 quality_issues = []
 empty_outputs = []
@@ -234,9 +243,16 @@ for line in file_response.text.split('\n'):
             invalid_json_outputs.append((filename, str(e)))
             print(f"⚠️  {filename}: Invalid JSON - {e}")
 
-    # Save summary to timestamped batch folder
+    # Save summary to timestamped batch folder with metadata header
     output_path = summaries_dir / f'{filename}_summary.md'
     with open(output_path, 'w', encoding='utf-8') as f:
+        # Write metadata comment first if manifest data available
+        if manifest_data:
+            metadata = {
+                "prompt_hash": manifest_data.get("prompt_hash"),
+                "batch_timestamp": manifest_data.get("timestamp")
+            }
+            f.write(f"<!-- batch_metadata: {json.dumps(metadata)} -->\n\n")
         f.write(summary)
 
     # Print save status with quality indicators
