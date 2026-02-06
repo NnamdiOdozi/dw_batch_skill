@@ -186,9 +186,9 @@ if is_embeddings:
 # Process each result with quality checks (chat completions)
 # Create timestamped summaries folder
 batch_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-summaries_dir = output_dir / 'summaries' / f'batch_{batch_timestamp}'
+summaries_dir = output_dir / 'text_output' / f'batch_{batch_timestamp}'
 summaries_dir.mkdir(parents=True, exist_ok=True)
-print(f"Summaries batch - saving to: {summaries_dir}/\n")
+print(f"Text output batch - saving to: {summaries_dir}/\n")
 
 results_count = 0
 quality_issues = []

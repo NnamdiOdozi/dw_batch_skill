@@ -84,7 +84,7 @@ chat_completions_endpoint = "/v1/chat/completions"
 [models]
 default_model = "Qwen/Qwen3-VL-30B-A3B-Instruct-FP8"   # Simple tasks (DEFAULT)
 # default_model = "Qwen/Qwen3-VL-235B-A22B-Instruct-FP8"  # Complex tasks
-embedding_model = "BAAI/bge-en-icl"
+embedding_model = "Qwen/Qwen3-Embedding-8B"
 
 [batch]
 completion_window = "1h"   # "1h" (recommended) or "24h"
