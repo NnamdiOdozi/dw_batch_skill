@@ -17,9 +17,21 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 
 1. **Read SKILL.md fully** before planning; consult GUIDE.md for Tier 2 cases and large jobs (>20K input or >5K output tokens)
 2. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
-3. **Script selection:** `create_batch.py` (text/data), `create_image_batch.py`, `create_scanned_pdf_batch.py`, `create_embeddings_batch.py`
+3. **Script selection:** Use the table below - do NOT mix file types across scripts
 4. **Always specify batch file** explicitly when submitting; poll batches in submission order
 5. **Use `--dry-run`** for large batches
+6. **Pre-flight size check**: Files >360K chars (~100K tokens) need chunking (Tier 2). Script auto-skips with warning.
+
+### Script Selection Table
+
+| File Types | Script | Notes |
+|------------|--------|-------|
+| PDF, DOCX, TXT, MD, CSV, XLS, XLSX, PPTX | `create_batch.py` | Text extraction |
+| PNG, JPG, JPEG (photos/graphics) | `create_image_batch.py` | Vision model required |
+| Scanned PDFs (image-based, no selectable text) | `create_scanned_pdf_batch.py` | OCR via vision model |
+| Any format for vector embeddings | `create_embeddings_batch.py` | Embedding model output |
+
+**Key rule:** PDFs with selectable text → `create_batch.py`. PDFs that are scanned images → `create_scanned_pdf_batch.py`.
 
 ---
 

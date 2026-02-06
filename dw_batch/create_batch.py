@@ -463,6 +463,14 @@ for idx, file_path in enumerate(all_files, 1):
         failed_files.append((file_path, "insufficient text"))
         continue
 
+    # Skip if document exceeds context window limit (128K tokens ≈ 360K chars)
+    # Leave ~28K tokens headroom for prompt and response
+    MAX_CONTEXT_CHARS = 360000
+    if len(text) > MAX_CONTEXT_CHARS:
+        print(f"  ⚠ SKIPPED: {len(text):,} chars exceeds {MAX_CONTEXT_CHARS:,} limit (needs chunking - Tier 2)")
+        failed_files.append((file_path, f"exceeds context limit: {len(text):,} chars > {MAX_CONTEXT_CHARS:,} (needs chunking)"))
+        continue
+
     print(f"  ✓ Extracted {len(text)} characters from {pages} pages [{extraction_method}]")
 
     # Track input chars for dry-run cost estimation (prompt + document text)
