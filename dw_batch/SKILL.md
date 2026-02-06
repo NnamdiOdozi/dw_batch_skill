@@ -294,4 +294,4 @@ See [GUIDE.md - Troubleshooting](GUIDE.md#error-handling-troubleshooting) for co
 - **Category:** Document Processing, Data Analysis, Batch Operations
 - **Dependencies:** Python 3.12+, Doubleword API access, uv package manager
 - **Output:** Markdown files in `dw_batch_output/`
-- **Latency:** 1-2 minutes (1h SLA) or 10-30 minutes (24h SLA)
+- **Latency:** typically < 5 minutes (1h SLA) or 10-30 minutes (24h SLA)

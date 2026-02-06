@@ -141,7 +141,7 @@ Use `{WORD_COUNT}` as an optional placeholder substituted from config.toml.
 
 ## SLA / Completion Window
 
-Use **1h** (recommended) for most tasks — results in 1-2 minutes. Use **24h** only for very large batches where cost matters more than speed.
+Use **1h** (recommended) for most tasks — results in 1-5 minutes. Use **24h** only for very large batches where cost matters more than speed.
 
 ---
 
@@ -194,10 +194,6 @@ uv run python poll_and_process.py --output-dir $PWD/dw_batch_output
 - **Multi-modal (text + images in one request):** Tier 2 — generate custom code using mixed-content message format
 
 All specialized scripts feed into the same `submit_batch.py` → `poll_and_process.py` pipeline.
-
-### Streaming API (Non-Batch)
-
-For real-time interactive use cases, Doubleword supports streaming (`stream=True`). See `streaming_example.py` for reference. Streaming has no cost savings over sync — batch is 50-85% cheaper.
 
 ---
 
