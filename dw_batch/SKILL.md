@@ -19,13 +19,18 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 ## Agent Checklist (Read Before Execution)
 
 1. **STOP and read SKILL.md fully** before ANY batch operations. **MANDATORY: Read GUIDE.md BEFORE proceeding** when: (a) any file is skipped, (b) estimated tokens >20K input or >5K output, (c) you need per-file prompts or conditional logic.
-2. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
-3. **Script selection:** Use the table below - do NOT mix file types across scripts
-4. **Always specify batch file** explicitly when submitting; poll batches in submission order
-5. **Use `--dry-run`** for large batches
-6. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
-7. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
-8. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
+2. **Check and update config.toml for each task if required**:
+   - Read current settings (model, max_tokens, summary_word_count)
+   - Verify settings match task requirements (e.g., "longer response" → increase max_tokens, "use 235B model" → change model)
+   - Update config.toml only if task needs differ from current settings
+   - **ALWAYS restore to defaults after batch completes** (unless user explicitly requests permanent override)
+3. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
+4. **Script selection:** Use the table below - do NOT mix file types across scripts
+5. **Always specify batch file** explicitly when submitting; poll batches in submission order
+6. **Use `--dry-run`** for large batches
+7. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
+8. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
+9. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
 
 ### Script Selection Table
 
