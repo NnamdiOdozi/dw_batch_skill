@@ -5,6 +5,9 @@ description: Async batch processing using Doubleword API. Process multiple docum
 
 # Doubleword Batch Request Skill
 
+**Effective Date:** 6 February 2026
+**Update Policy:** Documentation is updated monthly to reflect API changes and pricing updates.
+
 ## Overview
 
 A Claude Code skill for async batch processing using the Doubleword API. Process multiple documents/data files cost-effectively (50-85% cheaper than sync) for non-urgent tasks like embedding generation, analysis, summarization, translation, and evaluation.
@@ -22,6 +25,7 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 5. **Use `--dry-run`** for large batches
 6. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
 7. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
+8. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
 
 ### Script Selection Table
 

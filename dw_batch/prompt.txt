@@ -1,12 +1,7 @@
-Analyze this file and provide:
+Answer the questions below. For each question, provide:
 
-1. **Summary**: A concise summary of the file's contents (3-5 bullet points for documents, 2-3 sentences for data files)
+1. **Key Facts**: Relevant data, distances, context, etc.
+2. **Additional Context**: Background information if helpful
+3. **Direct Answer**: Clear yes/no or brief conclusion (PUT THIS LAST)
 
-2. **Key Details**:
-   - For documents: Main topics, key findings, or important points
-   - For spreadsheets/CSVs: Column descriptions, data types, row count, date ranges if applicable
-   - For images: Detailed caption describing what is shown in the image, including subjects, setting, colors, and any text visible
-
-3. **File Type**: Confirm the format and any notable characteristics
-
-Keep the response focused and under 300 words.
+Keep each answer focused and under 150 words.

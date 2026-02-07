@@ -1,5 +1,8 @@
 # Doubleword Batch Processing - Complete Guide
 
+**Effective Date:** 6 February 2026
+**Update Policy:** Documentation is updated monthly to reflect API changes and pricing updates.
+
 Detailed reference for the dw_batch skill. For quick start, see [SKILL.md](SKILL.md).
 
 ---
