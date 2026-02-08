@@ -26,11 +26,24 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
    - **ALWAYS restore to defaults after batch completes** (unless user explicitly requests permanent override)
 3. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
 4. **Script selection:** Use the table below - do NOT mix file types across scripts
-5. **Always specify batch file** explicitly when submitting; poll batches in submission order
-6. **Use `--dry-run`** for large batches
-7. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
-8. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
-9. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
+5. **Dry-run interpretation - ALWAYS provide comprehensive breakdown:**
+   - After ANY dry-run, automatically calculate and present:
+     * Total input/output tokens for ALL files (processable + skipped)
+     * Cost breakdown by category (small files vs large files needing chunking)
+     * Top 10 largest files by token count
+     * Summary of files needing special handling (scanned PDFs, missing libraries)
+   - Use user's output token assumptions if provided (e.g., "1500 tokens per file")
+   - Do NOT wait for user to ask "what about the large files?" - proactively show full picture
+   - **Tier 2 plan:** If files were skipped for chunking, briefly outline your approach:
+     * Read GUIDE.md 'Handling Long Documents' section
+     * Implement chunking strategy (overlapping chunks, page ranges, or section-based)
+     * Process chunks sequentially or in parallel
+     * Combine results into coherent output
+6. **Always specify batch file** explicitly when submitting; poll batches in submission order
+7. **Use `--dry-run`** for large batches
+8. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
+9. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
+10. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
 
 ### Script Selection Table
 
@@ -206,6 +219,22 @@ uv run python create_batch.py --input-dir /path/to/files --output-dir $PWD/dw_ba
 # Optional: Skip already-processed files
 uv run python create_batch.py --skip-existing --output-dir $PWD/dw_batch_output
 ```
+
+**AGENT DIRECTIVE: DRY-RUN INTERPRETATION**
+
+When dry-run completes, AUTOMATICALLY provide:
+1. Total input/output tokens (all files, including skipped)
+2. Cost breakdown (small vs large files)
+3. Top 10 largest files with individual costs
+4. Summary of files needing special handling
+5. **Brief Tier 2 handling plan** (if files need chunking):
+   - "Will read GUIDE.md and implement [chunking strategy]"
+   - Expected approach: chunk → process → combine
+   - No need for user approval of technical approach unless strategy choice is ambiguous
+
+Do NOT wait for "what about the large files?" - show full picture proactively.
+
+---
 
 **For detailed guides, see:**
 - [GUIDE.md](GUIDE.md) - Complete reference, troubleshooting, optimization

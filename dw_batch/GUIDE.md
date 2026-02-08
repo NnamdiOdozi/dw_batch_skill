@@ -160,6 +160,76 @@ Use **1h** (recommended) for most tasks — results in 1-5 minutes. Use **24h** 
 
 ---
 
+## Interpreting Dry-Run Results (For Agents)
+
+When presenting dry-run results to users, provide a comprehensive breakdown WITHOUT being prompted:
+
+### Required Information
+1. **Total token counts:**
+   - Input tokens for all files (processable + skipped)
+   - Output tokens (use user assumptions if provided, otherwise use MAX_TOKENS from config)
+   - Total cost at current model pricing
+
+2. **Category breakdown:**
+   - Small files (ready to process): count, tokens, cost
+   - Large files (need Tier 2 chunking): count, tokens, cost
+   - Scanned PDFs (need OCR): count and note different pricing
+   - Failed files (missing libraries, etc.): count and fix required
+
+3. **Top N largest files:**
+   - Show top 10 files by token count with individual costs
+   - Helps users decide on selective processing
+
+4. **Tier 2 handling plan** (if applicable):
+   - Brief description of chunking approach
+   - Expected workflow: chunk → process → combine
+   - Note: No user approval needed for technical implementation unless strategy is ambiguous
+
+### Example Output Format
+```
+Dry-run complete for 48 files:
+
+✅ PROCESSABLE NOW (19 files): $0.06
+   - 709K input + 28.5K output tokens
+
+📦 NEED TIER 2 CHUNKING (23 files): $0.27
+   - 3.7M input + 34.5K output tokens
+   - Plan: Read GUIDE.md, implement overlapping chunk strategy
+   - Will process automatically after user approval
+
+💰 TOTAL (42 text files): $0.33
+   - 4.4M input + 63K output = 4.5M total tokens
+   - (assuming 1500 tokens/file)
+
+📊 Top 10 Largest Files:
+   1. Continental Reinsurance: 366K tokens ($0.026)
+   2. Cornerstone Insurance: 224K tokens ($0.016)
+   ...
+
+⚠️ EXCLUDED:
+   - 5 scanned PDFs (need OCR via create_scanned_pdf_batch.py)
+   - 1 Excel file (needs: uv pip install openpyxl)
+```
+
+### Tier 2 Handling Workflow
+When files need chunking:
+1. **Read** GUIDE.md 'Handling Long Documents' section
+2. **Choose** chunking strategy based on file type:
+   - PDFs: Page-based chunks (e.g., 20-30 pages per chunk with 5-page overlap)
+   - Financial statements: Section-based (Income Statement, Balance Sheet, Notes)
+   - Reports: Chapter/section-based
+3. **Implement** custom chunking code (see GUIDE.md examples)
+4. **Process** chunks via batch API
+5. **Combine** results into coherent output
+
+### Why This Matters
+- Users want to understand the full scope before committing
+- Prevents "what about the skipped files?" follow-up questions
+- Shows clear path forward for all files (no dead ends)
+- Demonstrates proactive problem-solving
+
+---
+
 ## Step-by-Step Workflow
 
 ### Setup (One-time)
