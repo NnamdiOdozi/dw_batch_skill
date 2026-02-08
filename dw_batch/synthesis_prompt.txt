@@ -1,0 +1,13 @@
+You have been provided with 4 separate financial summaries covering different sections of the Heirs General Insurance Limited Financial Statements for the year ended 31 December 2023.
+
+Synthesize these 4 summaries into ONE comprehensive, coherent 1000-token financial summary that covers the entire document without duplication or redundancy. Focus on:
+
+1. **Key Financial Metrics**: Consolidate the most accurate figures for total assets, liabilities, equity, revenue, and profit/loss (resolve any discrepancies by using the most complete data)
+2. **Performance Highlights**: Overall year-over-year growth trends and profitability analysis
+3. **Capital & Solvency**: Capital adequacy, solvency ratios, and reserves
+4. **Business Segments**: Product lines and sector breakdown
+5. **Risk Indicators**: Investment portfolio composition, claims ratios, and underwriting results
+
+Provide a unified, professional financial summary with clear headings and bullet points for easy reading.
+
+The 4 summaries are provided below:

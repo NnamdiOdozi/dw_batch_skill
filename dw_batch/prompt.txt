@@ -1,12 +1,1 @@
-Provide a comprehensive 1000-token financial summary of this insurance company's annual report/financial statement. Include:
-
-1. Company Overview: Name, type of insurance (life/general/composite), year covered
-2. Financial Performance: Premium income, investment income, claims paid, underwriting profit/loss, net profit
-3. Balance Sheet Highlights: Total assets, total liabilities, shareholders' equity, investments
-4. Solvency & Capital Adequacy: Solvency margin, capital adequacy ratio, regulatory capital requirements
-5. Key Ratios: Combined ratio, loss ratio, expense ratio, return on equity
-6. Risk Assessment: Major risks identified, risk management strategies
-7. Regulatory Compliance: NAICOM requirements, IFRS 17 adoption status
-8. Notable Events: Major developments, acquisitions, expansions, challenges
-
-Format as structured markdown with clear sections. Use exact figures from the document where available.
+Provide a financial summary of this document in no more than 1000 tokens.

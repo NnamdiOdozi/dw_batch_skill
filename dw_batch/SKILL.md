@@ -22,9 +22,15 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 
 2. **Confirm exact scope when user mentions a directory**: If user provides a directory path without specifying exact files (e.g., "process files in /path/to/docs"), ALWAYS ask: "Which specific files would you like to process?" List the files found and wait for confirmation. Do NOT assume "all files" unless user explicitly says so. This prevents wasted processing and respects user's token conservation preferences.
 
-3. When ANY of these below apply, **STOP and read GUIDE.md** before proceeding:
+3. **FIRST: Check file location and copy to /tmp if needed:**
+   - If files are on mounted drives (/mnt/c/, /mnt/d/, network shares) **OR** (batch >25MB **OR** includes scanned PDFs):
+     * Run: `TEMP_DIR=$(mktemp -d) && cp /path/to/files/* "$TEMP_DIR/" && cd "$TEMP_DIR"`
+     * This saves 25-40% processing time - NOT optional for scanned PDFs
+   - Do this BEFORE any other steps (dry-run, GUIDE.md reading, processing)
+
+4. When ANY of these below apply, **STOP and read GUIDE.md** before proceeding:
    **PRE-PROCESSING INDICATORS (discovered before dry-run):**
-   - Batch has >25 files OR >50MB total size
+   - Batch has >25 files OR >10MB total size
    - Files are on mounted drives (/mnt/c, network shares, cloud-synced folders)
    - Scanned PDFs are included in the batch
    - Multimodal requests (text + images in one request)
@@ -35,19 +41,20 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
    - Any file is skipped (for any reason)
    - Estimated tokens >100K input or >10K output
 
-4. **Check and update config.toml for each task if required**:
+5. **Check and update config.toml for each task if required**:
    - Read current settings (model, max_tokens, summary_word_count)
    - Verify settings match task requirements (e.g., "longer response" → increase max_tokens, "use 235B model" → change model)
    - Update config.toml only if task needs differ from current settings
    - **ALWAYS restore to defaults after batch completes** (unless user explicitly requests permanent override)
-4. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >100K tokens (~360K chars)
-5. **Script selection:** Use the table below - do NOT mix file types across scripts
-6. **Dry-run interpretation - ALWAYS provide comprehensive breakdown:**
+6. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >100K tokens (~360K chars)
+7. **Script selection:** Use the table below - do NOT mix file types across scripts
+8. **Dry-run interpretation - ALWAYS provide comprehensive breakdown:**
    - After ANY dry-run, automatically calculate and present:
      * Total input/output tokens for ALL files (processable + skipped)
      * Cost breakdown by category (small files vs large files needing chunking)
      * Top 10 largest files by token count
      * Summary of files needing special handling (scanned PDFs, missing libraries)
+   - **CRITICAL for scanned PDFs:** Run `pdfinfo` immediately to get exact page count, then calculate `pages × 3,500 tokens/page` for exact cost. NEVER give vague ranges like "~$0.01-0.05". Show exact calculation: "34 pages × 3,500 = 119K tokens = $0.012"
    - Use user's output token assumptions if provided (e.g., "1500 tokens per file")
    - Do NOT wait for user to ask "what about the large files?" - proactively show full picture
    - **Tier 2 plan:** If files were skipped for chunking, briefly outline your approach:
@@ -55,11 +62,14 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
      * Implement chunking strategy (overlapping chunks, page ranges, or section-based)
      * Process chunks sequentially or in parallel
      * Combine results into coherent output
-7. **Always specify batch file** explicitly when submitting; poll batches in submission order
-8. **Use `--dry-run`** for large batches
-9. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
-10. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
-11. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
+9. **Always specify batch file** explicitly when submitting; poll batches in submission order
+10. **Dry-run policy**: For small jobs (<25K input tokens), dry-run is optional. For jobs above threshold, dry-run is default recommendation
+11. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **When to proceed automatically vs confirm:**
+   - **Proceed automatically** if user already confirmed scope ("all files") and accepted estimated cost → chunking/OCR is implementation detail
+   - **Pause and confirm** if including large/scanned files materially changes cost AND user hasn't confirmed "all files regardless of size"
+   - When proceeding: Read GUIDE.md 'Handling Long Documents' section and implement chunking strategy
+12. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
+13. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
 
 ### Script Selection Table
 
@@ -114,7 +124,7 @@ cp .env.dw.sample .env.dw
 # 1. Create your task prompt
 echo "Summarize this document in 3 bullet points." > prompt.txt
 
-# 2. Process your files (use --dry-run first to estimate costs)
+# 2. Process your files (optional: --dry-run for cost estimates on larger batches)
 uv run python create_batch.py --input-dir /path/to/docs --output-dir $PWD/dw_batch_output --dry-run
 uv run python create_batch.py --input-dir /path/to/docs --output-dir $PWD/dw_batch_output
 
@@ -184,7 +194,7 @@ uv run python poll_and_process.py --output-dir $PWD/dw_batch_output
 - Qwen3-VL-30B (simple): $0.07 input / $0.30 output per 1M tokens (1h SLA)
 - Qwen3-VL-235B (complex): $0.15 input / $0.55 output per 1M tokens (1h SLA)
 - 50-85% cheaper than sync API calls
-- Use `--dry-run` for estimates before processing. Only offer a dry-run when estimated input tokens exceed `dry_run_threshold` (default 25K) in config.toml. If the user declines, proceed with the task. For small jobs below the threshold, skip the dry-run offer entirely.
+- **Dry-run policy**: For small jobs (<25K input tokens per config.toml `dry_run_threshold`), dry-run is optional. For jobs above threshold, recommend dry-run by default. If user declines, proceed with the task.
 
 **Quality:**
 - Model-dependent (configure in `dw_batch/config.toml`)
@@ -251,7 +261,8 @@ When dry-run completes, AUTOMATICALLY provide:
 2. Cost breakdown (small vs large files)
 3. Top 10 largest files with individual costs
 4. Summary of files needing special handling
-5. **Brief Tier 2 handling plan** (if files need chunking):
+5. **For scanned PDFs:** Run `pdfinfo` NOW and show exact cost: "34 pages × 3,500 = 119K tokens = $0.012". NEVER give vague ranges.
+6. **Brief Tier 2 handling plan** (if files need chunking):
    - "Will read GUIDE.md and implement [chunking strategy]"
    - Expected approach: chunk → process → combine
    - No need for user approval of technical approach unless strategy choice is ambiguous
@@ -282,10 +293,8 @@ Process documents with mixed content (text + images) in a single request for cro
 
 ### [Scanned PDF OCR](examples.md#scanned-pdf-ocr)
 Extract text from scanned PDFs and images using vision models. Handles handwritten notes and low-quality scans.
-:
-**Use case:** "Digitize these scanned contracts"
-:
 
+**Use case:** "Digitize these scanned contracts"
 
 ---
 
@@ -323,15 +332,9 @@ See [GUIDE.md - Two-Tier System](GUIDE.md#two-tier-processing-system) for decisi
 
 See [GUIDE.md - Configuration](GUIDE.md#configuration) for detailed setup.
 
-### File Formats
-
-Supports: PDF, DOCX, PPTX, CSV, XLSX, TXT, MD, PNG, JPG, JPEG, and more. Vision models for images and scanned PDFs.
-
-See [GUIDE.md - Supported Formats](GUIDE.md#supported-file-formats) for full compatibility table.
-
 ---
 
-## Cost Optimizationt
+## Cost Optimization
 
 **Before processing, optimize 3 dimensions:**
 1. **File scope** - Only process what's needed (use `--files` or `--extensions`)
@@ -354,7 +357,6 @@ See [GUIDE.md - Cost Optimization](GUIDE.md#cost-optimization-checkpoint) for de
 
 **Common issues:**
 - Missing API key → Copy `.env.dw.sample` to `.env.dw` and add token
-- Want to change model/tokens → Edit `config.toml` (NOT .env.dw)
 - No files found → Check path and extensions
 - Module not found → Run `uv sync`
 - Quality issues → Check `process_results.py` output summary

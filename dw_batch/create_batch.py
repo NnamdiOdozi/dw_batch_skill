@@ -292,6 +292,71 @@ total_input_chars = 0  # Track for dry-run cost estimation
 # EXTRACTION FUNCTIONS
 # ============================================================================
 
+def is_scanned_pdf(pdf_path, max_pages_to_check=2):
+    """Quickly detect if PDF is scanned by sampling first 1-2 pages.
+
+    Pragmatic decision rule:
+    - Sample page 1: if text_chars >= 50 → native PDF
+    - If text_chars < 10 AND largest_image_coverage >= 0.6 → scanned
+    - Else sample page 2 and repeat
+
+    This typically finishes fast and avoids spending time on obvious scanned PDFs.
+
+    Args:
+        pdf_path: Path to PDF file
+        max_pages_to_check: Number of pages to sample (default: 2)
+
+    Returns:
+        True if scanned, False if native (has selectable text)
+    """
+    try:
+        import pdfplumber  # Need this for image detection
+        from pypdf import PdfReader
+
+        with pdfplumber.open(pdf_path) as pdf:
+            pages_to_check = min(max_pages_to_check, len(pdf.pages))
+
+            for page_num in range(pages_to_check):
+                page = pdf.pages[page_num]
+
+                # Extract text from this page
+                text = page.extract_text() or ''
+                text_chars = len(text.strip())
+
+                # Rule 1: If decent text found, it's native
+                if text_chars >= 50:
+                    return False  # Native PDF with selectable text
+
+                # Rule 2: If very little text AND large image coverage → scanned
+                if text_chars < 10:
+                    # Check image coverage
+                    images = page.images
+                    if images:
+                        # Calculate largest image coverage as fraction of page area
+                        page_area = page.width * page.height
+                        largest_coverage = 0
+                        for img in images:
+                            img_area = img.get('width', 0) * img.get('height', 0)
+                            coverage = img_area / page_area if page_area > 0 else 0
+                            largest_coverage = max(largest_coverage, coverage)
+
+                        if largest_coverage >= 0.6:
+                            return True  # Scanned PDF (image-based)
+
+            # If we checked both pages and still uncertain, assume scanned if very little text
+            # (avg text across sampled pages < 10 chars)
+            total_text_chars = sum(
+                len((pdf.pages[i].extract_text() or '').strip())
+                for i in range(pages_to_check)
+            )
+            avg_text_chars = total_text_chars / pages_to_check
+            return avg_text_chars < 10
+
+    except Exception as e:
+        # If detection fails, return False (assume native) and let extraction handle it
+        print(f"  ⚠ Scanned PDF detection failed ({e}), will attempt normal extraction")
+        return False
+
 def extract_text_pypdf(pdf_path):
     """Try pypdf first (faster)."""
     with open(pdf_path, 'rb') as f:
@@ -425,32 +490,26 @@ for idx, file_path in enumerate(all_files, 1):
     try:
         # Route to appropriate extraction method based on file type
         if file_extension == '.pdf':
-            # Check file size to detect potentially scanned PDFs early
-            file_size_mb = Path(file_path).stat().st_size / (1024 * 1024)
-            if file_size_mb > 50:
-                print(f"  ⚠ Large file ({file_size_mb:.1f} MB) - may be scanned. This could be slow...")
+            # Fast scanned PDF detection - sample first 1-2 pages before full extraction
+            print(f"  📄 Checking if PDF is scanned (sampling first pages)...")
+            if is_scanned_pdf(file_path):
+                print(f"  ⚠ Detected scanned PDF (image-based, no selectable text)")
+                print(f"    → AGENT: Use create_scanned_pdf_batch.py for OCR via vision model")
+                failed_files.append((file_path, "scanned PDF - use create_scanned_pdf_batch.py"))
+                continue
+
+            # PDF has selectable text - proceed with normal extraction
+            print(f"  ✓ Native PDF detected (has selectable text)")
 
             # Try pypdf first (faster), fallback to pdfplumber
             try:
                 text, pages = extract_text_pypdf(file_path)
                 extraction_method = 'pypdf'
-
-                # If large file extracted almost no text, it's likely scanned - skip pdfplumber fallback
-                if file_size_mb > 50 and len(text.strip()) < 500:
-                    print(f"  ⚠ Large file ({file_size_mb:.1f} MB) extracted only {len(text)} chars - likely scanned PDF")
-                    print(f"    → Use create_scanned_pdf_batch.py for better results (OCR via vision model)")
-                    # Don't attempt pdfplumber - it will be even slower and get similar results
             except (KeyError, Exception) as e:
                 if 'bbox' in str(e) or isinstance(e, KeyError):
-                    # Only retry with pdfplumber if file is small enough to be worth it
-                    if file_size_mb <= 50:
-                        print(f"  ⚠ pypdf failed ({e}), trying pdfplumber...")
-                        text, pages = extract_text_pdfplumber(file_path)
-                        extraction_method = 'pdfplumber'
-                    else:
-                        print(f"  ⚠ pypdf failed on large file ({file_size_mb:.1f} MB) - skipping pdfplumber (would be very slow)")
-                        print(f"    → Use create_scanned_pdf_batch.py for scanned PDFs")
-                        raise
+                    print(f"  ⚠ pypdf failed ({e}), trying pdfplumber...")
+                    text, pages = extract_text_pdfplumber(file_path)
+                    extraction_method = 'pdfplumber'
                 else:
                     raise
 

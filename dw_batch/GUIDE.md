@@ -72,15 +72,15 @@ Smart imports: only loads required libraries based on detected file types. See s
 
 ### Mounted Drive Optimization (WSL2, Network Drives, etc.)
 
-**When files are on mounted/remote filesystems** (e.g., `/mnt/c/` in WSL2, network shares, external drives), **copy to local `/tmp` first for batches >50MB total**. Cross-filesystem I/O adds significant overhead, especially for PDF parsing which requires random access.
+**When files are on mounted/remote filesystems** (e.g., `/mnt/c/` in WSL2, network shares, external drives), **copy to local `/tmp` **. Cross-filesystem I/O adds significant overhead, especially for PDF parsing which requires random access.
 
 **Performance impact:**
-- **Small batches (<50MB or <10 files with heavy PDF content):** Not worth copying (~5-10 seconds saved)
-- **Large batches (>50MB or 10+ files with heavy PDF content):** Copy saves **25-40% processing time** (2-5 minutes on typical insurance document batches)
+- **Small batches (<25MB or < 1 scanned PDF document):** Not worth copying (~5-10 seconds saved)
+- **Large batches (>25MB or at least 1 scanned PDF document):** Copy saves **25-40% processing time** (2-5 minutes on typical insurance document batches)
 
 **When to copy:**
-- Total file size **>50MB** OR
-- **10+ files with heavy PDF content** OR
+- Total file size **>25MB** OR
+- **at least 1 scanned PDF document** OR
 - Files on **mounted Windows drives** (`/mnt/c/`, `/mnt/d/`) OR
 - Files on **network shares** or **cloud-synced folders** OR
 - Processing **scanned PDFs** (image-heavy, lots of random seeks)
@@ -255,7 +255,7 @@ Dry-run complete for 48 files:
 📦 NEED TIER 2 CHUNKING (23 files): $0.27
    - 3.7M input + 34.5K output tokens
    - Plan: Read GUIDE.md, implement overlapping chunk strategy
-   - Will process automatically after user approval
+   - Will proceed automatically if scope confirmed, otherwise will ask
 
 🖼️ SCANNED PDFs (5 files): $0.13
    - ~515 pages × 3,500 tokens/page = 1.8M input + 6K output

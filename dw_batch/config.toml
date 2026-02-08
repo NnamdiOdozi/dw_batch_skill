@@ -28,11 +28,11 @@ completion_window = "1h"
 
 [output]
 # Summary word count (target length for generated summaries)
-summary_word_count = 750
+summary_word_count = 375
 
 # Maximum tokens for model response (includes reasoning + summary)
 # Adjust based on your summary_word_count: roughly word_count * 1.5 + buffer for reasoning
-max_tokens = 1200
+max_tokens = 500
 
 # NOTE: Output directories are passed by the agent via command-line args
 # Agent must specify --output-dir (typically project_root/dw_batch_output)
