@@ -18,15 +18,31 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 
 ## Agent Checklist (Read Before Execution)
 
-1. **STOP and read SKILL.md fully** before ANY batch operations. **MANDATORY: Read GUIDE.md BEFORE proceeding** when: (a) any file is skipped, (b) estimated tokens >20K input or >5K output, (c) you need per-file prompts or conditional logic.
-2. **Check and update config.toml for each task if required**:
+1. **STOP and read SKILL.md fully** before ANY batch operations.
+
+2. **Confirm exact scope when user mentions a directory**: If user provides a directory path without specifying exact files (e.g., "process files in /path/to/docs"), ALWAYS ask: "Which specific files would you like to process?" List the files found and wait for confirmation. Do NOT assume "all files" unless user explicitly says so. This prevents wasted processing and respects user's token conservation preferences.
+
+3. When ANY of these below apply, **STOP and read GUIDE.md** before proceeding:
+   **PRE-PROCESSING INDICATORS (discovered before dry-run):**
+   - Batch has >25 files OR >50MB total size
+   - Files are on mounted drives (/mnt/c, network shares, cloud-synced folders)
+   - Scanned PDFs are included in the batch
+   - Multimodal requests (text + images in one request)
+   - Documents estimated at >100K tokens requiring multi-step approach
+   - You'll use per-file prompts or conditional logic
+
+   **POST-PROCESSING INDICATORS (discovered during dry-run):**
+   - Any file is skipped (for any reason)
+   - Estimated tokens >100K input or >10K output
+
+4. **Check and update config.toml for each task if required**:
    - Read current settings (model, max_tokens, summary_word_count)
    - Verify settings match task requirements (e.g., "longer response" → increase max_tokens, "use 235B model" → change model)
    - Update config.toml only if task needs differ from current settings
    - **ALWAYS restore to defaults after batch completes** (unless user explicitly requests permanent override)
-3. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >128K tokens (~360K chars)
-4. **Script selection:** Use the table below - do NOT mix file types across scripts
-5. **Dry-run interpretation - ALWAYS provide comprehensive breakdown:**
+4. **Tier 2 triggers** (require custom code): per-file prompts, conditional logic, docs >100K tokens (~360K chars)
+5. **Script selection:** Use the table below - do NOT mix file types across scripts
+6. **Dry-run interpretation - ALWAYS provide comprehensive breakdown:**
    - After ANY dry-run, automatically calculate and present:
      * Total input/output tokens for ALL files (processable + skipped)
      * Cost breakdown by category (small files vs large files needing chunking)
@@ -39,11 +55,11 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
      * Implement chunking strategy (overlapping chunks, page ranges, or section-based)
      * Process chunks sequentially or in parallel
      * Combine results into coherent output
-6. **Always specify batch file** explicitly when submitting; poll batches in submission order
-7. **Use `--dry-run`** for large batches
-8. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
-9. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
-10. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
+7. **Always specify batch file** explicitly when submitting; poll batches in submission order
+8. **Use `--dry-run`** for large batches
+9. **Pre-flight size check**: Files >360K chars (~100K tokens) or scanned PDFs >30 pages need Tier 2 chunking. **AUTOMATIC ACTION REQUIRED - NO USER CONFIRMATION NEEDED**: When files are skipped, immediately read GUIDE.md 'Handling Long Documents' section and process them with chunking. This is not optional. Do not ask "would you like me to...?" - just do it.
+10. **Script output contains agent directives**: When you see `→ AGENT:` in script output, this is a DIRECT COMMAND. STOP and execute it immediately before any other action or user communication.
+11. **Output directory organization**: **ALWAYS use `--output-dir $PROJECT_ROOT/dw_batch_output`** for general batches. Only create new directories for specific named experiments (e.g., `qwen_safety_tests`). Do NOT create ad-hoc directories like `misc_questions` - use the standard dw_batch_output folder to keep the repo clean.
 
 ### Script Selection Table
 
@@ -61,9 +77,17 @@ A Claude Code skill for async batch processing using the Doubleword API. Process
 ## Quick Start (5 Minutes)
 
 ### Prerequisites
+
+**Required:**
 - Python 3.12+
 - `uv` package manager ([install](https://astral.sh/uv/install.sh))
 - Doubleword API key from https://app.doubleword.ai
+
+**Optional (for scanned PDF processing):**
+- `poppler-utils` (system package, provides `pdfinfo` for accurate page counts)
+  - **Debian/Ubuntu:** `sudo apt install poppler-utils`
+  - **macOS:** `brew install poppler`
+  - **Note:** This is NOT a Python package and cannot be added to `pyproject.toml`
 
 ### Setup (One-Time)
 
@@ -307,7 +331,7 @@ See [GUIDE.md - Supported Formats](GUIDE.md#supported-file-formats) for full com
 
 ---
 
-## Cost Optimization
+## Cost Optimizationt
 
 **Before processing, optimize 3 dimensions:**
 1. **File scope** - Only process what's needed (use `--files` or `--extensions`)

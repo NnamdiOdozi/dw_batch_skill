@@ -58,11 +58,71 @@ Claude Code spawns multiple shell sessions. `uv run` reads `pyproject.toml` / `u
 
 Smart imports: only loads required libraries based on detected file types. See scripts for full handler details.
 
+### Performance Optimization for Large PDFs
+
+**Scanned PDF Detection:** Files >50MB are checked for text content during extraction. If a large file extracts <500 chars, it's flagged as likely scanned and the script:
+- Skips slow pdfplumber fallback (would take 30-60+ seconds with no benefit)
+- Recommends using `create_scanned_pdf_batch.py` with vision model OCR instead
+
+**Why this matters:** A 120MB scanned PDF can take 2-3 minutes with both pypdf and pdfplumber attempts, only to extract almost nothing. This optimization saves significant time during dry-runs.
+
+### Accurate Page Count Estimation (For Scanned PDFs)
+
+**CRITICAL:** Use `pdfinfo` (from poppler-utils) to get exact page counts, then calculate cost as `pages × 3,500 tokens/page`. Do NOT rely on file size estimates.
+
+### Mounted Drive Optimization (WSL2, Network Drives, etc.)
+
+**When files are on mounted/remote filesystems** (e.g., `/mnt/c/` in WSL2, network shares, external drives), **copy to local `/tmp` first for batches >50MB total**. Cross-filesystem I/O adds significant overhead, especially for PDF parsing which requires random access.
+
+**Performance impact:**
+- **Small batches (<50MB or <10 files with heavy PDF content):** Not worth copying (~5-10 seconds saved)
+- **Large batches (>50MB or 10+ files with heavy PDF content):** Copy saves **25-40% processing time** (2-5 minutes on typical insurance document batches)
+
+**When to copy:**
+- Total file size **>50MB** OR
+- **10+ files with heavy PDF content** OR
+- Files on **mounted Windows drives** (`/mnt/c/`, `/mnt/d/`) OR
+- Files on **network shares** or **cloud-synced folders** OR
+- Processing **scanned PDFs** (image-heavy, lots of random seeks)
+
+**Pattern:**
+```bash
+# Copy files to local temp directory
+TEMP_DIR=$(mktemp -d)
+cp -r "/mnt/c/path/to/source_directory" "$TEMP_DIR/"
+
+# Process from local filesystem
+uv run python create_batch.py --input-dir "$TEMP_DIR/source_directory" \
+  --output-dir "$PROJECT_ROOT/dw_batch_output"
+
+# Cleanup after processing
+rm -rf "$TEMP_DIR"
+```
+
+**Why it helps:** PDFs are parsed with random access patterns (jumping through file structure), which is 5-10x slower on mounted filesystems. Large scanned PDFs (100MB+) see the biggest improvement. The 9P protocol (WSL2) and network protocols add latency to every seek operation.
+
 ---
 
 ## Handling Long Documents (Chunking)
 
-The Qwen3-VL models have a **128K token context window** (~90K words). When a single text document exceeds this after extraction (e.g., a 300-page report), use a **map-reduce** approach: chunk the text into ~80K-token segments at natural boundaries (paragraphs, headings) with slight overlap, batch-process each chunk with the same prompt, then submit the collected per-chunk results in a second batch with a synthesis prompt to produce the final output. This is a **Tier 2 task** — the agent generates a custom chunking script. Scanned PDFs already have built-in page-based chunking in `create_scanned_pdf_batch.py`; this applies to text-heavy documents only.
+The Qwen3-VL models have a **128K token context window** (~90K words). When a single text document exceeds this after extraction (e.g., a 300-page report), use a **map-reduce** approach:
+
+### CRITICAL - Two-Step Map-Reduce Process
+
+**⚠️ AGENTS: You MUST complete BOTH steps. Completing only the map step is incomplete processing.**
+
+1. **MAP STEP:** Chunk the text into ~80K-token segments at natural boundaries (paragraphs, headings) with slight overlap → batch-process each chunk with the same prompt → get per-chunk summaries
+
+2. **REDUCE STEP (MANDATORY):** Collect all per-chunk summaries → submit to a SECOND batch with a synthesis prompt → produce final coherent output
+
+**Example synthesis prompt:**
+```
+"You have been provided with N separate summaries covering different sections of [document name].
+Synthesize these summaries into ONE comprehensive, coherent [length]-token summary that covers
+the entire document without duplication or redundancy."
+```
+
+This is a **Tier 2 task** — the agent generates custom code for chunking and synthesis. Scanned PDFs already have built-in page-based chunking in `create_scanned_pdf_batch.py`; this workflow applies to both scanned PDFs and text-heavy documents.
 
 ---
 
@@ -173,7 +233,7 @@ When presenting dry-run results to users, provide a comprehensive breakdown WITH
 2. **Category breakdown:**
    - Small files (ready to process): count, tokens, cost
    - Large files (need Tier 2 chunking): count, tokens, cost
-   - Scanned PDFs (need OCR): count and note different pricing
+   - Scanned PDFs (need OCR): count, estimated tokens (**use 3,500 tokens/page** per examples.md), cost
    - Failed files (missing libraries, etc.): count and fix required
 
 3. **Top N largest files:**
@@ -197,9 +257,13 @@ Dry-run complete for 48 files:
    - Plan: Read GUIDE.md, implement overlapping chunk strategy
    - Will process automatically after user approval
 
-💰 TOTAL (42 text files): $0.33
-   - 4.4M input + 63K output = 4.5M total tokens
-   - (assuming 1500 tokens/file)
+🖼️ SCANNED PDFs (5 files): $0.13
+   - ~515 pages × 3,500 tokens/page = 1.8M input + 6K output
+   - (Token estimate per examples.md)
+   - Process via create_scanned_pdf_batch.py
+
+💰 TOTAL (47 files): $0.46
+   - 6.2M input + 66.5K output = 6.3M total tokens
 
 📊 Top 10 Largest Files:
    1. Continental Reinsurance: 366K tokens ($0.026)
@@ -207,7 +271,6 @@ Dry-run complete for 48 files:
    ...
 
 ⚠️ EXCLUDED:
-   - 5 scanned PDFs (need OCR via create_scanned_pdf_batch.py)
    - 1 Excel file (needs: uv pip install openpyxl)
 ```
 

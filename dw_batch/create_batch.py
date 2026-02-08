@@ -425,15 +425,32 @@ for idx, file_path in enumerate(all_files, 1):
     try:
         # Route to appropriate extraction method based on file type
         if file_extension == '.pdf':
+            # Check file size to detect potentially scanned PDFs early
+            file_size_mb = Path(file_path).stat().st_size / (1024 * 1024)
+            if file_size_mb > 50:
+                print(f"  ⚠ Large file ({file_size_mb:.1f} MB) - may be scanned. This could be slow...")
+
             # Try pypdf first (faster), fallback to pdfplumber
             try:
                 text, pages = extract_text_pypdf(file_path)
                 extraction_method = 'pypdf'
+
+                # If large file extracted almost no text, it's likely scanned - skip pdfplumber fallback
+                if file_size_mb > 50 and len(text.strip()) < 500:
+                    print(f"  ⚠ Large file ({file_size_mb:.1f} MB) extracted only {len(text)} chars - likely scanned PDF")
+                    print(f"    → Use create_scanned_pdf_batch.py for better results (OCR via vision model)")
+                    # Don't attempt pdfplumber - it will be even slower and get similar results
             except (KeyError, Exception) as e:
                 if 'bbox' in str(e) or isinstance(e, KeyError):
-                    print(f"  ⚠ pypdf failed ({e}), trying pdfplumber...")
-                    text, pages = extract_text_pdfplumber(file_path)
-                    extraction_method = 'pdfplumber'
+                    # Only retry with pdfplumber if file is small enough to be worth it
+                    if file_size_mb <= 50:
+                        print(f"  ⚠ pypdf failed ({e}), trying pdfplumber...")
+                        text, pages = extract_text_pdfplumber(file_path)
+                        extraction_method = 'pdfplumber'
+                    else:
+                        print(f"  ⚠ pypdf failed on large file ({file_size_mb:.1f} MB) - skipping pdfplumber (would be very slow)")
+                        print(f"    → Use create_scanned_pdf_batch.py for scanned PDFs")
+                        raise
                 else:
                     raise
 
